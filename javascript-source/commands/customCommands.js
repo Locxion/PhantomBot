@@ -100,6 +100,16 @@
             message = $.replace(message, '(offlineonly)', '');
         }
 
+        if (message.match(/\(gameonly=[^)]+\)/g)) {
+            var t = message.match(/\([^)]+\)/)[0],
+                game = t.replace('(gameonly=', '').replace(')', '');
+
+            if (!$.getGame($.channelName).equalsIgnoreCase(game)) {
+                return '';
+            }
+            message = $.replace(message, t, '');
+        }
+
         if (message.match(/\(sender\)/g)) {
             message = $.replace(message, '(sender)', $.username.resolve(event.getSender()));
         }
@@ -287,7 +297,7 @@
                         } catch (ex) {
                             if (ex.message.indexOf('not a string') != -1) {
                                 try {
-                                    customAPIResponse = jsonObject.getInt(jsonCheckList[0]);
+                                    customAPIResponse = new JSONObject(origCustomAPIResponse).getInt(jsonCheckList[0]);
                                 } catch (ex) {
                                     return $.lang.get('customcommands.customapijson.err', command);
                                 }
@@ -378,7 +388,7 @@
      * @function addComRegisterCommands
      * @param {boolean} silent
      */
-    function addComRegisterCommands(silent) {
+    function addComRegisterCommands() {
         if ($.bot.isModuleEnabled('./commands/customCommands.js')) {
             var commands = $.inidb.GetKeyList('command', ''),
                 i;
@@ -386,9 +396,7 @@
                 if (!$.commandExists(commands[i])) {
                     $.registerChatCommand('./commands/customCommands.js', commands[i], 7);
                 } else {
-                    if (!silent) {
-                        $.log.error('Cannot add custom command, command already exists: ' + commands[i]);
-                    }
+                    //$.log.error('Cannot add custom command, command already exists: ' + commands[i]);
                 }
             }
         }
@@ -398,17 +406,16 @@
      * @function addComRegisterAliases
      * @param {boolean} silent
      */
-    function addComRegisterAliases(silent) {
+    function addComRegisterAliases() {
         if ($.bot.isModuleEnabled('./commands/customCommands.js')) {
             var aliases = $.inidb.GetKeyList('aliases', ''),
                 i;
             for (i in aliases) {
                 if (!$.commandExists(aliases[i])) {
                     $.registerChatCommand('./commands/customCommands.js', aliases[i], $.getIniDbNumber('permcom', aliases[i], 7));
+                    $.registerChatAlias(aliases[i]);
                 } else {
-                    if (!silent) {
-                        $.log.error('Cannot add alias, command already exists: ' + aliases[i]);
-                    }
+                    //$.log.error('Cannot add alias, command already exists: ' + aliases[i]);
                 }
             }
         }
@@ -419,8 +426,8 @@
      * Used for the panel
      */
     function reloadCommands(command) {
-        addComRegisterAliases(true);
-        addComRegisterCommands(true);
+        addComRegisterAliases();
+        addComRegisterCommands();
         if (command) {
             $.unregisterChatCommand(command);
         }
@@ -575,6 +582,7 @@
             $.say($.whisperPrefix(sender) + $.lang.get('customcommands.alias.success', action + aliasArgs, subAction));
             $.inidb.set('aliases', subAction, action + aliasArgs);
             $.registerChatCommand('./commands/customCommands.js', subAction);
+            $.registerChatAlias(subAction);
             $.log.event(sender + ' added alias "!' + subAction + '" for "!' + action + aliasArgs + '"');
         }
 
@@ -814,6 +822,7 @@
 
             $.inidb.set('disabledCommands', action, true);
             $.say($.whisperPrefix(sender) + $.lang.get('customcommands.disable.success', action));
+            $.unregisterChatCommand(action.toLowerCase());
             $.log.event(sender + ' disabled command !' + command);
         }
 
@@ -827,10 +836,6 @@
             }
 
             action = action.toLowerCase();
-            if (!$.commandExists(action)) {
-                $.say($.whisperPrefix(sender) + $.lang.get('customcommands.enable.404'));
-                return;
-            }
 
             if (!$.inidb.exists('disabledCommands', action)) {
                 $.say($.whisperPrefix(sender) + $.lang.get('customcommands.enable.err'));
@@ -839,6 +844,7 @@
 
             $.inidb.del('disabledCommands', action);
             $.say($.whisperPrefix(sender) + $.lang.get('customcommands.enable.success', action));
+            $.registerChatCommand('./commands/customCommands.js', action.toLowerCase());
             $.log.event(sender + ' re-enabled command !' + command);
         }
 
@@ -883,6 +889,18 @@
         if (command.equalsIgnoreCase('reloadcommand')) {
             reloadCommands(args[0]);
         }
+        /**
+         * used for the panel
+         */
+        if (command.equalsIgnoreCase('registerpanel')) {
+            $.registerChatCommand('./commands/customCommands.js', args[0].toLowerCase());
+        }
+        /**
+         * used for the panel
+         */
+        if (command.equalsIgnoreCase('unregisterpanel')) {
+            $.unregisterChatCommand(args[0].toLowerCase());
+        }
     });
 
     /**
@@ -905,6 +923,8 @@
             $.registerChatCommand('./commands/customCommands.js', 'botcommands', 2);
             $.registerChatCommand('./commands/customCommands.js', 'reloadcommand', 1);
             $.registerChatCommand('./commands/customCommands.js', 'permcomsilent', 1);
+            $.registerChatCommand('./commands/customCommands.js', 'registerpanel', 1);
+            $.registerChatCommand('./commands/customCommands.js', 'unregisterpanel', 1);
         }
     });
 
