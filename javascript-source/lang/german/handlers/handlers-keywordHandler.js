@@ -1,0 +1,12 @@
+$.lang.register('keywordhandler.add.usage', 'Beispiel: !keyword add (keyword) (Antwort)');
+$.lang.register('keywordhandler.keyword.404', 'Dieses Keywort existiert nicht.');
+$.lang.register('keywordhandler.keyword.added', 'Keywort "$1" hinzugefügt!');
+$.lang.register('keywordhandler.keyword.removed', 'Keywort "$1" wurde entfernt!');
+$.lang.register('keywordhandler.keyword.usage', 'Beispiel: !keyword [add / remove] [keyword]');
+$.lang.register('keywordhandler.remove.usage', 'Beispiel: !keyword remove [keyword]');
+$.lang.register('keywordhandler.cooldown.usage', 'Beispiel: !keyword cooldown (keyword) (seconds) - Gebe -1 ein um den Cooldown zu entfernen.');
+$.lang.register('keywordhandler.cooldown.removed', 'Cooldown für $1 wurde entfernt.');
+$.lang.register('keywordhandler.cooldown.set', 'Cooldown für $1 wurde auf $2 Sekunden gesetzt.');
+$.lang.register('keywordhandler.price.usage', 'Beispiel: !keyword price (keyword) (cost)');
+$.lang.register('keywordhandler.price.removed', 'Preis für Keyword $1 wurde entfernt.');
+$.lang.register('keywordhandler.price.set', 'Preis für Keyword $1 wurde auf $2 gesetzt.');

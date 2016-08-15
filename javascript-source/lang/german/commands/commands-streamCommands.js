@@ -1,0 +1,13 @@
+$.lang.register('streamcommand.vod.404', 'Keine Videos gefunden.');
+$.lang.register('streamcommand.vod.online', 'Stream Uptime: $1 [$2]');
+$.lang.register('streamcommand.vod.offline', 'Stream ist offline. Letztes Video erstellt: [$1] [Length: $2]');
+$.lang.register('streamcommand.playtime.offline', '$1 streamt gerade nicht.');
+$.lang.register('streamcommand.playtime.online', '$1 spielte $2 for $3');
+$.lang.register('streamcommand.title', 'Momentaner Satuts: $1');
+$.lang.register('streamcommand.title.set.usage', 'Beispiel: !title set [Stream Titel]. Derzeit: $1');
+$.lang.register('streamcommand.game.online', 'Derzeitiges Spiel: $1. Spielzeit: $2');
+$.lang.register('streamcommand.game.offline', 'Derzeitiges Spiel: $1');
+$.lang.register('streamcommand.game.set.usage', 'Beispiel: !game set [game title]. Derzeit: $1');
+$.lang.register('streamcommand.viewers', 'Derzeit $1 spanner im Stream.');
+$.lang.register('streamcommand.online.offline', 'Stream ist offline.');
+$.lang.register('streamcommand.online.online', 'Stream ist online.');
