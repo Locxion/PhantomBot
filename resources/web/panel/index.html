@@ -21,9 +21,11 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="utf-8">
+
         <title>PhantomBot Control Panel</title>
 
-        <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
         <link rel="stylesheet" href="panel/js/jquery-ui/jquery-ui.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
         <link rel="stylesheet" href="panel/js/footable/footable.standalone.min.css">
@@ -33,8 +35,9 @@
         <script src="panel/js/flot/jquery.flot.min.js"></script>
         <script src="panel/js/ion-sound/js/ion.sound.min.js"></script>
         <script src="panel/js/footable/footable.min.js"></script>
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
 
+        <script type="text/javascript" src="panel/js/reconnectingWS.min.js"></script>
         <script type="text/javascript" src="panel/js/dateFormat.js"></script>
         <script type="text/javascript" src="panel/js/panelConfig.js"></script>
         <script type="text/javascript" src="panel/js/panelUtils.js"></script>
@@ -217,12 +220,12 @@
                </div>
                <i class="fa fa-twitch"></i>
             </div>
-            <span id="iframeLoader"><i style="color: purple" class="fa fa-spinner fa-spin fa-5x"></i><br><br>Loading Twitch Chat</span>
+            <!-- <span id="iframeLoader"><i style="color: purple" class="fa fa-spinner fa-spin fa-5x"></i><br><br>Loading Twitch Chat</span> -->
             <script>
                 $("#chatsidebar").append("<iframe id=\"chat\" frameborder=\"0\" scrolling=\"no\" onload=\"hideLoadingImage()\"" +
-                                         "src=\"http://www.twitch.tv/" + getChannelName() + "/chat?popout=\">");
-                $("#chat").hide();
-                $("#chatsidebar").draggable( { iframeFix: true } );
+                                         "src=\"https://www.twitch.tv/" + getChannelName().toLowerCase() + "/chat?popout=\">");
+                /*$("#chat").hide(); ** This breaks things in firefox. */
+                $("#chatsidebar").draggable({ iframeFix: true });
             </script>
         </div>
 

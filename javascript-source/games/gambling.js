@@ -17,7 +17,7 @@
 	function gamble(sender, amount) {
 		var winnings = 0,
 		    winSpot = 0,
-		    range = $.randRange(0, 100);
+		    range = $.randRange(1, 100);
 
 		if ($.getUserPoints(sender) < amount) {
 			$.say($.whisperPrefix(sender) + $.lang.get('gambling.need.points', $.pointNameMultiple));
@@ -100,7 +100,7 @@
 			}
 			winRange = action;
 			$.inidb.set('gambling', 'winRange', winRange);
-			$.say($.whisperPrefix(sender) + $.lang.get('gambling.win.range', winRange, (winRange - 1)));
+			$.say($.whisperPrefix(sender) + $.lang.get('gambling.win.range', parseInt(winRange) + 1, winRange));
 		}
 
 		/**
@@ -115,13 +115,6 @@
 			$.inidb.set('gambling', 'winGainPercent', winGainPercent);
 			$.say($.whisperPrefix(sender) + $.lang.get('gambling.percent', winGainPercent));
 		}
-
-		/**
-		* Used for the panel
-		*/
-		if (command.equalsIgnoreCase('reloadgamble')) {
-			reloadGamble();
-		}
 	});
 
 	$.bind('initReady', function() {
@@ -131,7 +124,8 @@
         	$.registerChatCommand('./games/gambling.js', 'gamblesetmin', 1);
         	$.registerChatCommand('./games/gambling.js', 'gamblesetwinningrange', 1);
         	$.registerChatCommand('./games/gambling.js', 'gamblesetgainpercent', 1);
-        	$.registerChatCommand('./games/gambling.js', 'reloadgamble', 1);
         }
     });
+
+    $.reloadGamble = reloadGamble;
 })();

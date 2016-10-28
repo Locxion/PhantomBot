@@ -9,7 +9,10 @@
         subWelcomeToggle = $.getSetIniDbBoolean('subscribeHandler', 'subscriberWelcomeToggle', true),
         reSubWelcomeToggle = $.getSetIniDbBoolean('subscribeHandler', 'reSubscriberWelcomeToggle', true),
         subReward = $.getSetIniDbNumber('subscribeHandler', 'subscribeReward', 0),
-        announce = false;
+        announce = false,
+        customEmote = '', //Add your custom emote to be said when a user resubscribes here. Use (customemote) in the message for it.
+        emotes = [],
+        i;
     /**
      * @function updateSubscribeConfig
      */
@@ -73,25 +76,27 @@
 
         if (subWelcomeToggle && announce) {
             if (message.match(/\(name\)/g)) {
-                message = $.replace(message, '(name)', $.username.resolve(subscriber));
+                message = $.replace(message, '(name)', subscriber);
             }
             if (message.match(/\(reward\)/g)) {
                 message = $.replace(message, '(reward)', String(subReward));
             }
             $.say(message);
             $.addSubUsersList(subscriber);
-            $.inidb.set('streamInfo', 'lastSub', $.username.resolve(subscriber));
+            $.restoreSubscriberStatus(subscriber, true);
+            $.inidb.set('streamInfo', 'lastSub', subscriber);
         }
     });
 
     $.bind('NewReSubscriber', function(event) { // From notice event
         var resubscriber = event.getReSub(),
             months = event.getReSubMonths(),
-            message = reSubMessage;
+            message = reSubMessage,
+            emotes = [];
 
         if (reSubWelcomeToggle && announce) {
             if (message.match(/\(name\)/g)) {
-                message = $.replace(reSubMessage, '(name)', $.username.resolve(resubscriber));
+                message = $.replace(reSubMessage, '(name)', resubscriber);
             }
             if (message.match(/\(months\)/g)) {
                 message = $.replace(message, '(months)', months);
@@ -99,9 +104,14 @@
             if (message.match(/\(reward\)/g)) {
                 message = $.replace(message, '(reward)', String(subReward));
             }
+            if (message.match(/\(customemote\)/)) {
+                for (i = 0; i < months; i++, emotes.push(customEmote));
+                message = $.replace(message, '(customemote)', emotes.join(' '));
+            }
             $.say(message);
+            $.addSubUsersList(subscriber);
             $.restoreSubscriberStatus(resubscriber, true);
-            $.inidb.set('streamInfo', 'lastReSub', $.username.resolve(resubscriber));
+            $.inidb.set('streamInfo', 'lastReSub', resubscriber);
         }
     });
 
@@ -113,11 +123,6 @@
             command = event.getCommand(),
             argsString = event.getArguments().trim(),
             args = event.getArgs();
-
-        /* Do not show command in command list, for the panel only. */
-        if (command.equalsIgnoreCase('subscribepanelupdate')) {
-            updateSubscribeConfig();
-        }
     
         /**
          * @commandpath subwelcometoggle - Enable or disable subscription alerts
@@ -232,8 +237,9 @@
             $.registerChatCommand('./handlers/subscribehandler.js', 'resubmessage', 2);
             $.registerChatCommand('./handlers/subscribehandler.js', 'subscribers', 2);
             $.registerChatCommand('./handlers/subscribehandler.js', 'subscribersoff', 2);
-            $.registerChatCommand('./handlers/subscribehandler.js', 'subscribepanelupdate', 1);
             announce = true;
         }
     });
+
+    $.updateSubscribeConfig = updateSubscribeConfig;
 })();

@@ -439,7 +439,7 @@
     function setStreamTitle() {
         var newTitle = $("#streamTitleInput").val();
         if (newTitle.length > 0) {
-            sendCommand("title setsilent " + newTitle);
+            sendCommand("settitlesilent " + newTitle);
             $("#streamTitleInput").val(newTitle);
         }
     }
@@ -450,7 +450,7 @@
     function setGameTitle() {
         var newGame = $("#gameTitleInput").val();
         if (newGame.length > 0) {
-            sendCommand("game setsilent " + newGame);
+            sendCommand("setgamesilent " + newGame);
             $("#gameTitleInput").val(newGame);
             gameTitle = newGame;
         }
@@ -495,7 +495,7 @@
     function setMultiLink(tagId, tableKey) {
         var newValue = $(tagId).val();
         if (newValue.length > 0) {
-            sendDBUpdate('multiLinkInput', 'dualStreamCommand', tableKey, '/' + newValue.replace(/\s+/g, '/'));
+            sendDBUpdate('multiLinkInput', 'dualStreamCommand', tableKey, newValue.replace(/\s+/g, '/'));
             $(tagId).val('')
             $(tagId).attr("placeholder", newValue).blur();
             setTimeout(function() { sendCommand("reloadmulti"); }, TIMEOUT_WAIT_TIME);

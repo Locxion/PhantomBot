@@ -168,7 +168,7 @@ public class TwitchWSIRC extends WebSocketClient {
      */
     @Override
     public void onClose(int code, String reason, boolean remote) {
-        com.gmt2001.Console.out.println("Disconnected from Twitch WS-IRC Server.");
+        com.gmt2001.Console.out.println("Failed to connect to Twitch WS-IRC, retying connection in 10 seconds...");
         com.gmt2001.Console.debug.println("Code [" + code + "] Reason [" + reason + "] Remote Hangup [" + remote + "]");
         session.reconnect();
     }
@@ -202,7 +202,7 @@ public class TwitchWSIRC extends WebSocketClient {
      */
     public void onError(Exception ex) {
         if (!ex.toString().contains("ArrayIndexOutOfBoundsException")) {
-            com.gmt2001.Console.err.println("Twitch WS-IRC Exception: " + ex);
+            com.gmt2001.Console.debug.println("Twitch WS-IRC Exception: " + ex);
         }
     }
 

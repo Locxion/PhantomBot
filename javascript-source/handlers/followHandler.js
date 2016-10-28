@@ -159,10 +159,10 @@
                         }, 8e3);
                     }
                     lastFollowTime = $.systemTime();//last follow was here, save this time for later.
+                    $.inidb.set('streamInfo', 'lastFollow', $.username.resolve(follower));//set the follower name in the db for the panel to read.
                 }
 
                 $.setIniDbBoolean('followed', follower, true);//set the follower as followed.
-                $.inidb.set('streamInfo', 'lastFollow', $.username.resolve(follower));//set the follower name in the db for the panel to read.
                 /** Give points to the user if the caster wants to. */
                 if (followReward > 0) {
                     $.inidb.incr('points', follower, followReward);
@@ -203,13 +203,7 @@
             command = event.getCommand(),
             args = event.getArgs(),
             argString = event.getArguments(),
-            action = args[0],
-            channel = $.channelName;
-
-        /* Do not show command on the command list, for the panel only. */
-        if (command.equalsIgnoreCase('followerpanelupdate')) {
-            updateFollowConfig();
-        }
+            action = args[0];
 
         /**
          * Set a follow reward for when someone follows.
@@ -301,15 +295,6 @@
         }
 
         /**
-         * Tells you how many followers you currently have.
-         *
-         * @commandpath followers - Announce the current amount of followers
-         */
-        if (command.equalsIgnoreCase('followers')) {
-            $.say($.lang.get('followhandler.followers', $.getFollows($.channelName)))
-        }
-
-        /**
          * Check to see if a user is following your channel.
          *
          * @commandpath checkfollow [username] - Check if a user is following the channel
@@ -359,29 +344,6 @@
         }
 
         /**
-         * See how long you have been following a channel, or a user has been following you.
-         *
-         * @commandpath followage [user] - Tells you how long someone has been following the channel for
-         * @commandpath followage [user] [channel] - Tells you how long someone has been following that channel for
-         * @commandpath followage - Tells you how long you have been following the channel
-         */
-        if (command.equalsIgnoreCase('followage')) {
-            if (args.length > 0) {
-                sender = args[0];
-            }
-
-            if (args.length > 1) {
-                channel = args[1];
-            }
-
-            if ($.twitch.GetUserFollowsChannel(sender.toLowerCase(), channel.toLowerCase()).getInt('_http') == 200) {
-                $.getFollowAge(event.getSender(), sender, channel);
-            } else {
-                $.say($.lang.get('followhandler.follow.age.err.404', $.userPrefix(event.getSender(), true), sender, channel));
-            }
-        }
-
-        /**
          * Sets a user as a follower in the db, this is for the heart on the panel.
          *
          * @commandpath fixfollow [user] - Will force add a user to the followed list to the bot, and will add a heart next to the name on the panel
@@ -418,12 +380,11 @@
             $.registerChatCommand('./handlers/followHandler.js', 'followdelay', 1);
             $.registerChatCommand('./handlers/followHandler.js', 'followmessage', 1);
             $.registerChatCommand('./handlers/followHandler.js', 'checkfollow', 2);
-            $.registerChatCommand('./handlers/followHandler.js', 'followers', 7);
             $.registerChatCommand('./handlers/followHandler.js', 'follow', 2);
             $.registerChatCommand('./handlers/followHandler.js', 'shoutout', 2);
             $.registerChatCommand('./handlers/followHandler.js', 'caster', 2);
-            $.registerChatCommand('./handlers/followHandler.js', 'followerpanelupdate', 1);
-            $.registerChatCommand('./handlers/followHandler.js', 'followage');
         }
     });
+
+    $.updateFollowConfig = updateFollowConfig;
 })();

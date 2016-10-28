@@ -12,9 +12,14 @@
         modeO = false,
         modules = [],
         hooks = [],
+        lastRecon = 0,
         pricecomMods = ($.inidb.exists('settings', 'pricecomMods') ? $.inidb.get('settings', 'pricecomMods') : false),
         coolDownMsgEnabled = ($.inidb.exists('settings', 'coolDownMsgEnabled') ? $.inidb.get('settings', 'coolDownMsgEnabled') : false),
         permComMsgEnabled = ($.inidb.exists('settings', 'permComMsgEnabled') ? $.inidb.get('settings', 'permComMsgEnabled') : true);
+
+    /* Make these null to start */
+    $.session = null;
+    $.channel = null;
 
     /**
      * @class
@@ -335,26 +340,27 @@
          */
 
          if (command.equalsIgnoreCase($.botName.toLowerCase())) {
-            if (!$.isAdmin(sender)) {
-                $.say($.whisperPrefix(sender) + $.adminMsg);
-                return;
-            }
-
             if (!action) {
                 $.say($.whisperPrefix(sender) + $.lang.get('init.usage', $.botName.toLowerCase()));
                 return;
             }
 
             if (action.equalsIgnoreCase('rejoin') || action.equalsIgnoreCase('reconnect')) {
-                $.say($.lang.get('init.reconnect', 'irc-ws.chat.twitch.tv'));
+                /* Added a cooldown to this so people can spam it and cause errors. */
+                if (lastRecon + 10000 >= $.systemTime()) {
+                    $.consoleLn('[ERROR] Already trying to reconnect.');
+                    return;
+                }
+                lastRecon = $.systemTime();
+                $.say($.whisperPrefix(sender) + $.lang.get('init.reconnect', 'irc-ws.chat.twitch.tv'));
                 $.log.event(username + ' requested a reconnect!');
                 setTimeout(function () { $.session.close(); }, 100);
-                setTimeout(function () { $.say($.getIniDbString('settings', 'connectedMsg', $.botName + ' successfully rejoined!')) }, 1000);
+                setTimeout(function () { $.say($.whisperPrefix(sender) + $.getIniDbString('settings', 'connectedMsg', $.botName + ' successfully rejoined!')) }, 5000);
                 return;
             }
 
             if (action.equalsIgnoreCase('disconnect') || action.equalsIgnoreCase('remove')) {
-                $.say($.lang.get('init.disconnect', 'irc-ws.chat.twitch.tv'));
+                $.say($.whisperPrefix(sender) + $.lang.get('init.disconnect', 'irc-ws.chat.twitch.tv'));
                 $.log.event(username + ' removed the bot from chat!');
                 setTimeout(function () { java.lang.System.exit(0); }, 100);
                 return;
@@ -454,6 +460,11 @@
             if (!$.isBot(sender)) {
                 return;
             }
+            if (lastRecon + 10000 >= $.systemTime()) {
+                $.consoleLn('[ERROR] Already trying to reconnect.');
+                return;
+            }
+            lastRecon = $.systemTime();
             $.log.event(username + ' requested a reconnect!');
             $.session.close();
         }
@@ -471,11 +482,6 @@
          * @commandpath module - Display the usage for !module
          */
         if (command.equalsIgnoreCase('module')) {
-            if (!$.isAdmin(sender)) {
-                $.say($.whisperPrefix(sender) + $.adminMsg);
-                return;
-            }
-
             if (!action) {
                 $.say($.whisperPrefix(sender) + $.lang.get('init.module.usage'));
                 return;
@@ -685,11 +691,6 @@
          * @commandpath echo [message] - In the console, can be used to chat as the bot. Also used by the webpanel to communicate with chat
          */
         if (command.equalsIgnoreCase('chat') || command.equalsIgnoreCase('echo')) {
-            if (!$.isAdmin(sender)) {
-                $.say($.whisperPrefix(sender) + $.adminMsg);
-                return;
-            }
-
             $.say(event.getArguments());
         }
     }
@@ -714,11 +715,13 @@
         loadScript('./core/commandRegister.js');
         loadScript('./core/whisper.js');
         loadScript('./core/commandCoolDown.js');
+        loadScript('./core/keywordCoolDown.js');
         loadScript('./core/gameMessages.js');
         loadScript('./core/patternDetector.js');
         loadScript('./core/permissions.js');
         loadScript('./core/streamInfo.js');
         loadScript('./core/timeSystem.js');
+        loadScript('./core/panelCommands.js');
 
         $.log.event('Core loaded, initializing bot...');
 
@@ -797,6 +800,8 @@
                 command = event.getCommand().toLowerCase(),
                 args = event.getArgs(),
                 subCommand = (args[0] ? args[0] : ''),
+                subCommandAction = (args[1] ? args[1] : ''),
+                commandCost = 0,
                 permComCheck = $.permCom(sender, command, subCommand),
                 isModv3 = $.isModv3(sender, event.getTags());
 
@@ -864,11 +869,12 @@
                 return;
             }
 
-            if ($.inidb.exists('pricecom', command)) {
+            if (($.inidb.exists('pricecom', command) || $.inidb.exists('pricecom', command + ' ' + subCommand) || $.inidb.exists('pricecom', (command + ' ' + subCommand + ' ' + subCommandAction)))) {
                 if ((((isModv3 && pricecomMods && !$.isBot(sender)) || !isModv3))) {
                     if (isModuleEnabled('./systems/pointSystem.js')) {
-                        if ($.getUserPoints(sender) < $.getCommandPrice(command)) {
-                            $.say($.whisperPrefix(sender) + $.lang.get('cmd.needpoints', $.getPointsString($.inidb.get('pricecom', command))));
+                        commandCost = $.getCommandPrice(command, subCommand, subCommandAction);
+                        if ($.getUserPoints(sender) < commandCost) {
+                            $.say($.whisperPrefix(sender) + $.lang.get('cmd.needpoints', $.getPointsString(commandCost)));
                             return;
                         }
                     }
@@ -881,8 +887,8 @@
                 if (parseInt($.inidb.get('paycom', command)) > 0) {
                     $.inidb.incr('points', sender, $.inidb.get('paycom', command));
                 }
-                if ($.inidb.exists('pricecom', command) && parseInt($.inidb.get('pricecom', command)) > 0) {
-                    $.inidb.decr('points', sender, $.inidb.get('pricecom', command));
+                if (commandCost > 0 && (((isModv3 && pricecomMods && !$.isBot(sender)) || !isModv3))) {
+                    $.inidb.decr('points', sender, commandCost);
                 }
             }
             handleInitCommands(event);
@@ -991,7 +997,6 @@
          */
         $api.on($script, 'ircPrivateMessage', function(event) {
             callHook('ircPrivateMessage', event, false);
-            $.whisperCommands(event);
         });
 
         /**
@@ -1251,6 +1256,14 @@
          */
         $api.on($script, 'Bits', function(event) {
             callHook('Bits', event, false);
+        });
+
+        /**
+         * @event api-DeveloperCommandEvent
+         */
+        $api.on($script, 'DeveloperCommand', function(event) {
+            callHook('command', event, false);
+            handleInitCommands(event);
         });
 
         $.log.event('init.js api\'s loaded.');

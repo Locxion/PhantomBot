@@ -14,7 +14,7 @@
 
  You should have received a copy of the GNU General Public License
  along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
  @author IllusionaryOne
 -->
 
@@ -57,7 +57,7 @@
         <br>
 
         <div>
-            <span id="userPtsTableTitle">User Time Table</span>
+            <span id="userPtsTableTitle">User Points Table</span>
         </div>
         <br>
         <div id="userPointsTable" style="height: 510px; overflow: auto;" />
@@ -93,18 +93,6 @@
         </div>
 
         <div class="form-group" onkeypress="return event.keyCode != 13">
-            <label for="setPointName">Set Online Points Gain</label>
-            <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setgain')">Update</button>
-            <input type="number" min="0" class="form-control" id="setPointGainInput_setgain" placeholder="Points" />
-        </div>
-
-        <div class="form-group" onkeypress="return event.keyCode != 13">
-            <label for="setPointName">Set Offline Points Gain</label>
-            <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setofflinegain')">Update</button>
-            <input type="number" min="0" class="form-control" id="setPointGainInput_setofflinegain" placeholder="Points" />
-        </div>
-
-        <div class="form-group" onkeypress="return event.keyCode != 13">
             <label for="setPointName">Set Online Points Payout Interval (Minutes)</label>
             <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setinterval')">Update</button>
             <input type="number" min="0" class="form-control" id="setPointGainInput_setinterval" placeholder="Points" />
@@ -114,6 +102,18 @@
             <label for="setPointName">Set Offline Points Payout Interval (Minutes)</label>
             <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setofflineinterval')">Update</button>
             <input type="number" min="0" class="form-control" id="setPointGainInput_setofflineinterval" placeholder="Points" />
+        </div>
+
+        <div class="form-group" onkeypress="return event.keyCode != 13">
+            <label for="setPointName">Set Online Points Gain</label>
+            <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setgain')">Update</button>
+            <input type="number" min="0" class="form-control" id="setPointGainInput_setgain" placeholder="Points" />
+        </div>
+
+        <div class="form-group" onkeypress="return event.keyCode != 13">
+            <label for="setPointName">Set Offline Points Gain</label>
+            <button type="button" class="btn btn-primary inline pull-right" onclick="$.setPointGain('setofflinegain')">Update</button>
+            <input type="number" min="0" class="form-control" id="setPointGainInput_setofflinegain" placeholder="Points" />
         </div>
 
         <div class="form-group" onkeypress="return event.keyCode != 13">

@@ -36,6 +36,7 @@
  *
  * // Query DB keys and values
  * { "dbkeys" : "query_id", "query" : { "table" : "table_name"  } }
+ * { "dbkeyslist" : "query_id", "query" : [ { "table" : "table_name"  } ] }
  *
  * // Update DB
  * { "dbupdate" : "query_id", "update" : { "table" : "table_name", "key" : "key_name", "value" : "new_value" } }
@@ -102,6 +103,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.gmt2001.TwitchAPIv3;
+
 import com.google.common.collect.Maps;
 
 import org.java_websocket.WebSocket;
@@ -120,6 +123,7 @@ public class PanelSocketServer extends WebSocketServer {
     private String authString;
     private String authStringRO;
     private Map<String, wsSession> wsSessionMap = Maps.newHashMap();
+    private boolean dbCallNull = false;
 
     public PanelSocketServer(int port, String authString, String authStringRO) {
         super(new InetSocketAddress(port));
@@ -187,7 +191,13 @@ public class PanelSocketServer extends WebSocketServer {
                 authenticated = jsonObject.getString("authenticate").equals(authStringRO);
                 sessionData.setAuthenticated(authenticated);
                 sessionData.setReadOnly(true);
-            } 
+
+                if (!authenticated) {
+                    authenticated = authenticateOauth(jsonObject.getString("authenticate"));
+                    sessionData.setAuthenticated(authenticated);
+                    sessionData.setReadOnly(false);
+                }
+            }
             return;
         }
 
@@ -222,6 +232,10 @@ public class PanelSocketServer extends WebSocketServer {
                 uniqueID = jsonObject.getString("dbkeys");
                 String table = jsonObject.getJSONObject("query").getString("table");
                 doDBKeysQuery(webSocket, uniqueID, table);
+            } else if (jsonObject.has("dbkeyslist")) {
+                uniqueID = jsonObject.getString("dbkeyslist");
+                jsonArray = jsonObject.getJSONArray("query");
+                doDBKeysListQuery(webSocket, uniqueID, jsonArray);
             } else if (jsonObject.has("dbupdate") && !sessionData.isReadOnly()) {
                 uniqueID = jsonObject.getString("dbupdate");
                 String table = jsonObject.getJSONObject("update").getString("table");
@@ -288,8 +302,17 @@ public class PanelSocketServer extends WebSocketServer {
 
     private void doVersion(WebSocket webSocket, String id) {
         JSONStringer jsonObject = new JSONStringer();
+        String version = "";
 
-        String version = PhantomBot.instance().getBotInfo();
+        try {
+            version = PhantomBot.instance().getBotInfo();
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                dbCallNull = true;
+                debugMsg("NULL returned from DB.  DB Object not created yet.");
+            }
+            return;
+        }
 
         jsonObject.object().key("versionresult").value(id).key("version").value(version).endObject();
         webSocket.send(jsonObject.toString());
@@ -297,8 +320,19 @@ public class PanelSocketServer extends WebSocketServer {
 
     private void doDBQuery(WebSocket webSocket, String id, String table, String key) {
         JSONStringer jsonObject = new JSONStringer();
+        String value = "";
 
-        String value = PhantomBot.instance().getDataStore().GetString(table, "", key);
+        try {  
+            value = PhantomBot.instance().getDataStore().GetString(table, "", key);
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                dbCallNull = true;
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
+
+        dbCallNull = false;
         jsonObject.object().key("query_id").value(id).key("results").object();
         jsonObject.key("table").value(table).key(key).value(value).endObject().endObject();
         webSocket.send(jsonObject.toString());
@@ -309,40 +343,109 @@ public class PanelSocketServer extends WebSocketServer {
 
         jsonObject.object().key("query_id").value(id).key("results").array();
 
-        String[] dbKeys = PhantomBot.instance().getDataStore().GetKeyList(table, "");
-        for (String dbKey : dbKeys) {
-            String value = PhantomBot.instance().getDataStore().GetString(table, "", dbKey);
-            jsonObject.object().key("table").value(table).key("key").value(dbKey).key("value").value(value).endObject();
+        try {
+            String[] dbKeys = PhantomBot.instance().getDataStore().GetKeyList(table, "");
+            for (String dbKey : dbKeys) {
+                String value = PhantomBot.instance().getDataStore().GetString(table, "", dbKey);
+                jsonObject.object().key("table").value(table).key("key").value(dbKey).key("value").value(value).endObject();
+            }
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
         }
 
         jsonObject.endArray().endObject();
         webSocket.send(jsonObject.toString());
     }
 
+    private void doDBKeysListQuery(WebSocket webSocket, String id, JSONArray jsonArray) {
+        JSONStringer jsonObject = new JSONStringer();
+
+        if (jsonArray.length() == 0) {
+            return;
+        }
+
+        jsonObject.object().key("query_id").value(id).key("results").array();
+
+        try {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                if (jsonArray.getJSONObject(i).has("table")) {
+                    String table = jsonArray.getJSONObject(i).getString("table");
+                    String[] dbKeys = PhantomBot.instance().getDataStore().GetKeyList(table, "");
+                    for (String dbKey : dbKeys) {
+                        String value = PhantomBot.instance().getDataStore().GetString(table, "", dbKey);
+                        jsonObject.object().key("table").value(table).key("key").value(dbKey).key("value").value(value).endObject();
+                    }
+                }
+            }
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
+
+        jsonObject.endArray().endObject();
+        webSocket.send(jsonObject.toString());
+    }
+
+
     private void doDBUpdate(WebSocket webSocket, String id, String table, String key, String value) {
         JSONStringer jsonObject = new JSONStringer();
-        PhantomBot.instance().getDataStore().set(table, key, value);
+        try {
+            PhantomBot.instance().getDataStore().set(table, key, value);
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
+
         jsonObject.object().key("query_id").value(id).endObject();
         webSocket.send(jsonObject.toString());
     }
 
     private void doDBIncr(WebSocket webSocket, String id, String table, String key, String value) {
         JSONStringer jsonObject = new JSONStringer();
-        PhantomBot.instance().getDataStore().incr(table, key, Integer.parseInt(value));
+        try {
+            PhantomBot.instance().getDataStore().incr(table, key, Integer.parseInt(value));
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
+
         jsonObject.object().key("query_id").value(id).endObject();
         webSocket.send(jsonObject.toString());
     }
 
     private void doDBDecr(WebSocket webSocket, String id, String table, String key, String value) {
         JSONStringer jsonObject = new JSONStringer();
-        PhantomBot.instance().getDataStore().decr(table, key, Integer.parseInt(value));
+        try {
+            PhantomBot.instance().getDataStore().decr(table, key, Integer.parseInt(value));
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
         jsonObject.object().key("query_id").value(id).endObject();
         webSocket.send(jsonObject.toString());
     }
 
     private void doDBDelKey(WebSocket webSocket, String id, String table, String key) {
         JSONStringer jsonObject = new JSONStringer();
-        PhantomBot.instance().getDataStore().del(table, key);
+        try {
+            PhantomBot.instance().getDataStore().del(table, key);
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
+        }
         jsonObject.object().key("query_id").value(id).endObject();
         webSocket.send(jsonObject.toString());
     }
@@ -356,10 +459,17 @@ public class PanelSocketServer extends WebSocketServer {
 
     private void doAudioHooksUpdate(JSONObject jsonObject) {
         JSONArray jsonArray = jsonObject.getJSONArray("audio_hooks");
-        PhantomBot.instance().getDataStore().RemoveFile("audio_hooks");
-        for (int i = 0; i < jsonArray.length(); i++) {
-            jsonArray.getJSONObject(i).getString("name");
-            PhantomBot.instance().getDataStore().set("audio_hooks", jsonArray.getJSONObject(i).getString("name"), jsonArray.getJSONObject(i).getString("name"));
+        try {
+            PhantomBot.instance().getDataStore().RemoveFile("audio_hooks");
+            for (int i = 0; i < jsonArray.length(); i++) {
+                jsonArray.getJSONObject(i).getString("name");
+                PhantomBot.instance().getDataStore().set("audio_hooks", jsonArray.getJSONObject(i).getString("name"), jsonArray.getJSONObject(i).getString("name"));
+            }
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return;
         }
     }
 
@@ -376,6 +486,36 @@ public class PanelSocketServer extends WebSocketServer {
 
     private static String genSessionKey(WebSocket webSocket) {
         return new String(Integer.toString(webSocket.getRemoteSocketAddress().hashCode()));
+    }
+
+    private Boolean authenticateOauth(String oauth) {
+        String value;
+        String authUsername = TwitchAPIv3.instance().GetUserFromOauth(oauth);
+
+        if (authUsername == null) {
+            return false;
+        }
+
+        // TODO: This will be migrated into a file for management, for right now, this is in the
+        //        database for testing purposes.
+        try {
+            value = PhantomBot.instance().getDataStore().GetString("ws_test_auth", "", authUsername);
+        } catch (NullPointerException ex) {
+            if (!dbCallNull) {
+                dbCallNull = true;
+                debugMsg("NULL returned from DB. DB Object not created yet.");
+            }
+            return false;
+        }
+
+        if (value == null) {
+            return false;
+        }
+        if (value.equals(authUsername)) {
+            return true;
+        }
+        
+        return false;
     }
 
     // -----------------------------------------------------------------------

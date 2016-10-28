@@ -112,8 +112,16 @@
             $.inidb.set('modules', modules[i], 'false');
         }
 
+        $.consoleLn('Adding new default custom commands...');
+        $.inidb.set('command', 'uptime', '(@sender) (channelname) has been online for (uptime)');
+        $.inidb.set('command', 'followage', '(followage)');
+        $.inidb.set('command', 'playtime', '(@sender) (channelname) has been playing (game) for (playtime)');
+        $.inidb.set('command', 'title', '(@sender) (titleinfo)');
+        $.inidb.set('command', 'game', '(@sender) (gameinfo)');
+        $.inidb.set('command', 'age', '(age)');
+
         $.consoleLn('Installing old updates...');
-        versions = ['installedv2', 'installedv2.0.5', 'installedv2.0.6', 'installedv2.0.7', 'installedv2.0.7.2', 'installedv2.0.8', 'installedv2.0.9', 'installedv2.1.0', 'installedv2.1.1', 'installedv2.2.1'];
+        versions = ['installedv2', 'installedv2.0.5', 'installedv2.0.6', 'installedv2.0.7', 'installedv2.0.7.2', 'installedv2.0.8', 'installedv2.0.9', 'installedv2.1.0', 'installedv2.1.1', 'installedv2.2.1', 'installedv2.3s', 'installedv2.3.3s'];
         for (i in versions) {
             $.inidb.set('updates', versions[i], 'true');
         }
@@ -386,7 +394,7 @@
         }
         sounds = "";
 
-        $.consoleLn($.version + ' updates completed!');
+        $.consoleLn('PhantomBot v2.1 updates completed!');
         $.inidb.set('updates', 'installedv2.1.0', 'true');
         $.inidb.set('updates', 'installedNewBot', 'true');//If bot login is deleted after updates were installed we don't want to reset the modules.
     }
@@ -402,16 +410,89 @@
         $.inidb.set('updates', 'installedv2.1.1', 'true');
     }
 
-    /** Version 2.2.1 updates */
-    if (!$.inidb.exists('updates', 'installedv2.2.1') || $.inidb.get('updates', 'installedv2.2.1') != 'true') {
-        $.consoleLn('Starting ' + $.version + ' updates...');
+    /** Version 2.3 updates */
+    if (!$.inidb.exists('updates', 'installedv2.3s') || $.inidb.get('updates', 'installedv2.3s') != 'true') {
+        $.consoleLn('Starting 2.3 updates...');
 
         $.consoleLn('Disabling new modules...');
         $.inidb.set('modules', './handlers/bitsHandler.js', 'false');
         $.inidb.set('modules', './systems/autoHostSystem.js', 'false');
 
-        $.consoleLn($.version + ' updates completed!');
-        $.inidb.set('updates', 'installedv2.2.1', 'true');
+        $.consoleLn('Setting up new default custom commands...');
+        if (!$.inidb.exists('command', 'uptime')) {
+            $.inidb.set('command', 'uptime', '(@sender) (channelname) has been online for (uptime)');
+        }
+        if (!$.inidb.exists('command', 'followage')) {
+            $.inidb.set('command', 'followage', '(followage)');
+        }
+        if (!$.inidb.exists('command', 'playtime')) {
+            $.inidb.set('command', 'playtime', '(@sender) (channelname) has been playing (game) for (playtime)');
+        }
+        if (!$.inidb.exists('command', 'title')) {
+            $.inidb.set('command', 'title', '(@sender) (titleinfo)');
+        }
+        if (!$.inidb.exists('command', 'game')) {
+            $.inidb.set('command', 'game', '(@sender) (gameinfo)');
+        }
+        if (!$.inidb.exists('command', 'age')) {
+            $.inidb.set('command', 'age', '(age)');
+        }
+        if ($.inidb.exists('permcom', 'game set')) {
+            $.inidb.set('permcom', 'setgame', $.inidb.get('permcom', 'game set'));
+        }
+        if ($.inidb.exists('permcom', 'title set')) {
+            $.inidb.set('permcom', 'settitle', $.inidb.get('permcom', 'title set'));
+        }
+
+        $.inidb.del('permcom', 'game set');
+        $.inidb.del('permcom', 'title set');
+
+        $.consoleLn('Updating auto hosting settings...');
+        if ($.inidb.exists('autohost_config', 'force') && $.inidb.get('autohost_config', 'force') == true) {
+            $.inidb.set('autohost_config', 'force', false);
+        }
+        if ($.inidb.exists('autohost_config', 'host_time_minutes') && $.inidb.get('autohost_config', 'host_time_minutes') < 30) {
+            $.inidb.set('autohost_config', 'host_time_minutes', 0);
+        }
+
+        $.consoleLn('Setting up new toggles...');
+        $.inidb.set('adventureSettings', 'warningMessage', true);
+        $.inidb.set('adventureSettings', 'enterMessage', true);
+
+        $.consoleLn('v2.3 updates completed!');
+        $.inidb.set('updates', 'installedv2.3s', 'true');
+    }
+
+    /* version 2.3.3s updates */
+    if (!$.inidb.exists('updates', 'installedv2.3.3s') || $.inidb.get('updates', 'installedv2.3.3s') != 'true') {
+        $.consoleLn('Starting ' + $.version + ' updates...');
+
+        $.consoleLn('Deleting the old emotes cache.');
+        $.inidb.RemoveFile('emotecache');
+
+        $.consoleLn('Updating raffle settings...');
+        if ($.inidb.exists('settings', 'raffleMSGToggle')) {
+            $.inidb.set('raffleSettings', 'raffleMSGToggle', $.inidb.get('settings', 'raffleMSGToggle'));
+            $.inidb.del('settings', 'raffleMSGToggle');
+        }
+
+        if ($.inidb.exists('settings', 'noRepickSame')) {
+            $.inidb.set('raffleSettings', 'noRepickSame', $.inidb.get('settings', 'noRepickSame'));
+            $.inidb.del('settings', 'noRepickSame');
+        }
+
+        if ($.inidb.exists('settings', 'raffleMessage')) {
+            $.inidb.set('raffleSettings', 'raffleMessage', $.inidb.get('settings', 'raffleMessage'));
+            $.inidb.del('settings', 'raffleMessage');
+        }
+
+        if ($.inidb.exists('settings', 'raffleMessageInterval')) {
+            $.inidb.set('raffleSettings', 'raffleMessageInterval', $.inidb.get('settings', 'raffleMessageInterval'));
+            $.inidb.del('settings', 'raffleMessageInterval');
+        }
+
+        $.consoleLn( $.version + ' updates completed!');
+        $.inidb.set('updates', 'installedv2.3.3s', 'true');
     }
 
     /**

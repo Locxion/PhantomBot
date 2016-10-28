@@ -20,7 +20,7 @@
 	    message = $.getIniDbString('bitsSettings', 'message', '(name) just cheered (amount) bits!');
 	    reward = $.getIniDbNumber('bitsSettings', 'reward', 0);
 	    minimum = $.getIniDbNumber('bitsSettings', 'minimum', 0);
-	};
+	}
 
 	/**
 	 * Gets the event from the core when someone cheers in the chat.
@@ -28,11 +28,14 @@
 	 * @event BitsEvent
 	 */
 	$.bind('Bits', function(event) {
+		if (!announceBits || !toggle) {
+			return;
+		}
 		var s = message;
 
 		/** Match (name) if it is in the message to replace it with the username to cheered. */
 		if (s.match(/\(name\)/g)) {
-			s = $.replace(s, '(name)', event.getUsername());
+			s = $.replace(s, '(name)', $.username.resolve(event.getUsername()));
 		}
 
 		/** Match (amount) if it is in the message to replace it with the amount of bits the user cheered. */
@@ -46,14 +49,11 @@
 		}
 
 		/** Make sure the module is on, and the bits toggle has been toggle on by the bot owner. */
-		if (announceBits && toggle) {
-			if (event.getBits() >= minimum) {//Check if the user cheered enough bits. Default is 0, so any amount.
-				$.say(s);
-			} else if (reward > 0) {//Check if the owner set a reward for when someone cheers. Default is non.
-				$.inidb.incr('points', username, parseInt(reward));
-			}
-			/** Write thelast  user and the amount of bits to a file for if the owner wants to display it on his stream. */
-			//$.writeToFile($.username.resolve(event.getUsername()) + ': ' + event.getBits(), './addons/bitsHandler/lastCheer.txt', false);
+		if (event.getBits() >= minimum) {//Check if the user cheered enough bits. Default is 0, so any amount.
+			$.say(s);
+			if (reward > 0) {//Check if the owner set a reward for when someone cheers. Default is non.
+			    $.inidb.incr('points', event.getUsername(), parseInt(reward));
+		    }
 		}
 	});
 
@@ -138,15 +138,6 @@
 			$.say($.whisperPrefix(sender) + $.lang.get('bitshandler.minimum.set', minimum));
 			$.log.event(sender + ' changed the bits minimum to: ' + minimum + ' bits.');
 		}
-
-		/**
-	     * Used by the panel when someone updates a setting to reload the script vars.
-	     * 
-	     * No command path.
-	     */
-		if (command.equalsIgnoreCase('reloadbits')) {
-			reloadBits();
-		}
 	});
 
     /**
@@ -160,8 +151,9 @@
         	$.registerChatCommand('./handlers/bitsHandler.js', 'bitsmessage', 1);
         	$.registerChatCommand('./handlers/bitsHandler.js', 'bitsreward', 1);
         	$.registerChatCommand('./handlers/bitsHandler.js', 'bitsminimum', 1);
-        	$.registerChatCommand('./handlers/bitsHandler.js', 'reloadbits', 1);
         	announceBits = true; //Make sure the module is enabled to announce bits, incase the toggle is on.
         }
     });
+
+    $.reloadBits = reloadBits;
 })();

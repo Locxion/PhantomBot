@@ -8,6 +8,7 @@ $.lang.register('customcommands.alias.delete.success', 'the alias !$1 was succes
 $.lang.register('customcommands.alias.delete.usage', 'usage: !delalias (alias name)');
 $.lang.register('customcommands.alias.error', 'An alias already exists for !$1. Delete it first.');
 $.lang.register('customcommands.alias.error.target404', 'the target command does not exist!');
+$.lang.register('customcommands.add.disable', 'that command is currently disabled. Delete it to add a new one or re-enable it.');
 $.lang.register('customcommands.alias.success', 'the command !$1 was successfully aliased to !$2');
 $.lang.register('customcommands.alias.usage', 'usage: !aliascom (alias name) (existing command) [optional parameters]');
 $.lang.register('customcommands.delete.success', 'command !$1 has been removed!');
@@ -21,7 +22,7 @@ $.lang.register('customcommands.set.perm.404', 'This command does not seem to ex
 $.lang.register('customcommands.set.price.error.404', 'please select a command that exists and is available to non-mods.');
 $.lang.register('customcommands.set.price.error.invalid', 'please enter a valid price, 0 or greater.');
 $.lang.register('customcommands.set.price.success', 'the price for !$1 has been set to $2 $3.');
-$.lang.register('customcommands.set.price.usage', 'usage: !pricecom (command) (price)');
+$.lang.register('customcommands.set.price.usage', 'usage: !pricecom (command) [subcommand] [subaction] (price). Optional: subcommand and subaction');
 $.lang.register('customcommands.set.pay.error.404', 'please select a command that exists and is available to non-mods.');
 $.lang.register('customcommands.set.pay.error.invalid', 'please enter a valid payment, 0 or greater.');
 $.lang.register('customcommands.set.pay.success', 'the pay for !$1 has been set to $2 $3.');

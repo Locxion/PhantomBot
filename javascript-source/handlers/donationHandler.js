@@ -43,7 +43,7 @@
             $.mkDir(donationAddonDir);
         }
 
-        $.consoleLn(">> Enabling Twitch Alerts donation announcements");
+        $.consoleLn(">> Enabling StreamLabs donation announcements");
         $.log.event('Donation announcements enabled');
         announceDonationsAllowed = true;
     });
@@ -123,12 +123,7 @@
         var sender = event.getSender().toLowerCase(),
             command = event.getCommand(),
             args = event.getArgs();
-
-        /* Hidden from command list, for panel only. */
-        if (command.equalsIgnoreCase('donationpanelupdate')) {
-            donationpanelupdate();
-        }
-
+        
         /**
          * Tells the user the last donation that the caster got.
          *
@@ -171,9 +166,9 @@
         /**
          * Base command for the donation alert settings.
          *
-         * @commandpath twitchalerts - Controls various options for donation handling
+         * @commandpath streamlabs - Controls various options for donation handling
          */
-        if (command.equalsIgnoreCase('twitchalerts')) {
+        if (command.equalsIgnoreCase('streamlabs')) {
             if (!args[0]) {
                 $.say($.whisperPrefix(sender) + $.lang.get('donationhandler.donations.usage'));
                 return;
@@ -182,7 +177,7 @@
             /**
              * Toggles the donators group, if the caster wants to promote people to Donators.
              *
-             * @commandpath twitchalerts toggledonators - Toggles the Donator's group.
+             * @commandpath streamlabs toggledonators - Toggles the Donator's group.
              */
             if (args[0].equalsIgnoreCase('toggledonators')) {
                 if (donationGroup) {
@@ -201,7 +196,7 @@
             /**
              * Sets the minimum amount the user needs to donate for him to be promoted to a Donator, if the group is toggled on.
              *
-             * @commandpath twitchalerts minmumbeforepromotion - Set the minimum before people get promoted to a Donator
+             * @commandpath streamlabs minmumbeforepromotion - Set the minimum before people get promoted to a Donator
              */
             if (args[0].equalsIgnoreCase('minmumbeforepromotion')) {
                 if (!args[1]) {
@@ -217,7 +212,7 @@
             /**
              * Toggles the donation announcements if the caster wants them.
              *
-             * @commandpath twitchalerts announce - Toggles announcements for donations off and on
+             * @commandpath streamlabs announce - Toggles announcements for donations off and on
              */
             if (args[0].equalsIgnoreCase('announce')) {
                 if (announceDonations) {
@@ -237,7 +232,7 @@
             /**
              * Reward multiplier for the amount the user donates he will get his amount X the multiplier.
              *
-             * @commandpath twitchalerts rewardmultiplier [n.n] - Set a reward multiplier for donations.
+             * @commandpath streamlabs rewardmultiplier [n.n] - Set a reward multiplier for donations.
              */
             if (args[0].equalsIgnoreCase('rewardmultiplier')) {
                 if (!args[1]) {
@@ -259,8 +254,8 @@
             /**
              * Sets either the message for when someone donates or for the !lastdonation command.
              *
-             * @commandpath twitchalerts message [message text] - Set the donation message. Tags: (name), (amount), (points), (pointname), (message) and (currency)
-             * @commandpath twitchalerts lastmessage [message text] - Set the message for !lastdonation. Tags: (name), (amount) and (currency)
+             * @commandpath streamlabs message [message text] - Set the donation message. Tags: (name), (amount), (points), (pointname), (message) and (currency)
+             * @commandpath streamlabs lastmessage [message text] - Set the message for !lastdonation. Tags: (name), (amount) and (currency)
              */
             if (args[0].equalsIgnoreCase('message') || args[0].equalsIgnoreCase('lastmessage')) {
                 var comArg = args[0].toLowerCase();
@@ -296,8 +291,9 @@
         if ($.bot.isModuleEnabled('./handlers/donationHandler.js')) {
             $.registerChatCommand('./handlers/donationHandler.js', 'lastdonation', 7);
             $.registerChatCommand('./handlers/donationHandler.js', 'lasttip', 7);
-            $.registerChatCommand('./handlers/donationHandler.js', 'twitchalerts', 1);
-            $.registerChatCommand('./handlers/donationHandler.js', 'donationpanelupdate', 1);
+            $.registerChatCommand('./handlers/donationHandler.js', 'streamlabs', 1);
         }
     });
+
+    $.donationpanelupdate = donationpanelupdate;
 })();
